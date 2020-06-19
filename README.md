@@ -1,2 +1,6 @@
-# finding-hidden-dog
-KMU-CS Web client computing final project: Finding hidden dog
+#### 숨어 있는 강아지 찾기
+
+- 프로젝트 목표
+
+  숨어 있는 강아지 찾기 게임의 기본 상황을 포함하여 업그레이드된 게임을 제작
+
