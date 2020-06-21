@@ -10,15 +10,12 @@ let db = admin.firestore();
 // insert inserts data into database.
 // public DNS(IPv4): https://us-central1-finding-hidden-dog.cloudfunctions.net/insert
 exports.insert = functions.https.onRequest((request, response) => {
-  const user = request.body.user_name;
-  const timeSpent = parseFloat(request.body.time_spent);
-
   // add new data into database.
   db.collection('scores')
     .doc()
     .set({
-      user_name: user,
-      time_spent: timeSpent
+      user_name: request.body.user_name,
+      time_spent: parseFloat(request.body.time_spent)
     });
 })  // end insert.
 
