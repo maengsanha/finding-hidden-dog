@@ -223,11 +223,10 @@
           })
 
           return 'Success! You can see the rank at https://us-central1-finding-hidden-dog.cloudfunctions.net/get';
-     } // end endGame.
-        
-     ```
-        
-     
+        } // end endGame.
+        ```
+   
+   
    
 2. index.js
    
@@ -245,22 +244,22 @@
    
          public DNS(IPv4): `https://us-central1-finding-hidden-dog.cloudfunctions.net/insert`
    
-         ```javascript
-         // insert inserts data into database.
-         exports.insert = functions.https.onRequest((request, response) => {
-           const data = JSON.parse(request.body);
-         
-           // add new data into database.
-           db.collection('scores')
-          .doc()
-             .set({
-            user_name: data.user_name,
-               time_spent: parseFloat(data.time_spent)
-          })
-      })  // end insert.
-      ```
+            ```javascript
+            // insert inserts data into database.
+            exports.insert = functions.https.onRequest((request, response) => {
+              const data = JSON.parse(request.body);
+            
+              // add new data into database.
+              db.collection('scores')
+                .doc()
+                .set({
+                  user_name: data.user_name,
+                  time_spent: parseFloat(data.time_spent)
+                })
+            })  // end insert.
+            ```
    
-      사용자 이름과 소요 시간을 담은 데이터를 요청의 body로 받아 DB에 저장한다.
+            사용자 이름과 소요 시간을 담은 데이터를 요청의 body로 받아 DB에 저장한다.
    
          
    
@@ -271,28 +270,28 @@
          ```javascript
          // get gets top ten score datas from database.
          // public DNS(IPv4): https://us-central1-finding-hidden-dog.cloudfunctions.net/get
-      exports.get = functions.https.onRequest((request, response) => {
+         exports.get = functions.https.onRequest((request, response) => {
            let rankInfo = 'Success!\tRank Info.\n';
-        let cnt = 1;
-         
+           let cnt = 1;
+          
            db.collection('scores')
-          .where('time_spent', '>', 0)
+             .where('time_spent', '>', 0)
              .orderBy('time_spent')
-       .limit(10)
+             .limit(10)
              .get()
-          .then(snapshot => {
+             .then(snapshot => {
                snapshot.forEach(doc => {
-                 rankInfo += cnt + '. ' + doc.data().user_name + '\t' + doc.data().time_spent + '\n';
-                 cnt++;
+               rankInfo += cnt + '. ' + doc.data().user_name + '\t' + doc.data().time_spent + '\n';
+               cnt++;
                })
                response.send(rankInfo);
-             })
-             .catch(err => {
-               console.log(err);
-             });
+            })
+            .catch(err => {
+              console.log(err);
+            });
          })  // end get.
          ```
-         
+   
          DB에서 상위 10위까지의 랭킹 정보를 반환한다.
          
          이 때, 걸린 시간이 0 이하일 경우 비정상 데이터라고 판단하여 결과에 포함시키지 않는다.
