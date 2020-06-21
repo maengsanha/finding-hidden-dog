@@ -52,9 +52,9 @@
 
       
 
-      <img src="https://user-images.githubusercontent.com/62831866/85227345-d3ddd700-b417-11ea-81b1-879a01fb3d34.png">
+      <img src="https://user-images.githubusercontent.com/62831866/85235668-e5dc6b80-b451-11ea-8c69-73c14679ebdc.png">
 
-      제한 시간 안에 강아지들을 모두 찾으면 사용자 이름과 소요 시간이 데이터베이스에 저장되고 상위 10위까지의 랭킹 정보를 보여준다.
+      제한 시간 안에 강아지들을 모두 찾으면 사용자 이름과 소요 시간이 데이터베이스에 저장되고 랭킹 정보를 확인할 수 있는 주소를 알려준다.
 
       
 
@@ -171,8 +171,8 @@
               clearInterval(cnt);
               const time_end = new Date().getTime();
               const time_spent = time_end - time_start;
-              alert('time spent: ' + time_spent / 1000 + 'sec');
-              // endGame(time_spent / 1000);
+              // alert('time spent: ' + time_spent / 1000 + 'sec');
+              alert(endGame(time_spent / 1000));
               return;
             }
             timeOut--;
@@ -202,77 +202,106 @@
 
         
 
-      - endGame: 게임 성공 시 랭킹 정보를 업데이트하고 상위 10위까지의 정보를 보여줌
+      - endGame: 게임 성공 시 랭킹 정보를 업데이트하고 랭킹 정보를 확인할 수 있는 주소를 알려줌
 
         ```javascript
         // endGame sends score data to Firebase, receives top 10 scores.
         function endGame(timeSpent) {
+          // ignore user whose name is DEFAULT
           if (userName == 'DEFAULT')
             timeSpent = -1;
+        
+          let data = {
+            user_name: userName,
+            time_spent: timeSpent
+          };
+        
           // insert score data into FireStore
+          fetch('https://us-central1-finding-hidden-dog.cloudfunctions.net/insert', {
+            method: 'POST',
+            body: JSON.stringify(data)
+          })
+
+          return 'Success! You can see the rank at https://us-central1-finding-hidden-dog.cloudfunctions.net/get';
+     } // end endGame.
         
-          // end sending data
+     ```
         
-          // get top 10 scores.
-        
-          // end getting data
-        
-          return;
-        } // end endGame.
-        
-        ```
-
-        
-
-   2. index.js
-
-      
-
-      게임 성공 시 점수 정보를 데이터베이스에 저장하는 **insert**함수와 상위 10위까지의 랭킹 정보를 반환하는 **get** 함수로 구성된다.
-
-      Firebase는 **FaaS**(Function as a Service) 방식을 따르므로 프로젝트 생성 후 함수만 작성하여 배포하면 즉시 사용 가능하다는 장점이 있다.
-
-      데이터베이스로 사용한 **FireStore**는 NoSQL DB로, 쿼리문이 javascript 문법과 유사하여 개발자 친화적이라는 장점이 있다.
-
-      
-
+     
+   
+2. index.js
+   
+   
+   
+   게임 성공 시 점수 정보를 데이터베이스에 저장하는 **insert**함수와 상위 10위까지의 랭킹 정보를 반환하는 **get** 함수로 구성된다.
+   
+   Firebase는 FaaS(Function as a Service)의 형태로 서비스를 제공하는데, 프로젝트 생성 후 함수만 작성하여 배포하면 즉시 사용 가능하다는 장점이 있다.
+   
+   데이터베이스로 사용한 Firestore는 NoSQL DB로, 쿼리문이 javascript 문법과 유사하여 개발자 친화적이라는 장점이 있다.
+   
+   
+   
       1. insert
-
+   
          public DNS(IPv4): `https://us-central1-finding-hidden-dog.cloudfunctions.net/insert`
-
+   
          ```javascript
          // insert inserts data into database.
          exports.insert = functions.https.onRequest((request, response) => {
+           const data = JSON.parse(request.body);
+         
            // add new data into database.
            db.collection('scores')
-             .doc()
+          .doc()
              .set({
-               user_name: request.body.user_name,
-               time_spent: parseFloat(request.body.time_spent)
-             });
-         })  // end insert.
-         ```
-
-         사용자 이름과 소요 시간을 담은 데이터를 요청의 body로 받아 DB에 저장한다.
-
+            user_name: data.user_name,
+               time_spent: parseFloat(data.time_spent)
+          })
+      })  // end insert.
+      ```
+   
+      사용자 이름과 소요 시간을 담은 데이터를 요청의 body로 받아 DB에 저장한다.
+   
          
-
+   
       2. get
-
+   
          public DNS(IPv4): `https://us-central1-finding-hidden-dog.cloudfunctions.net/get`
-
+      
          ```javascript
          // get gets top ten score datas from database.
-         exports.get = functions.https.onRequest((request, response) => {
-           response.send(
-             db.collection('scores')
-               .where('time_spent', '>', 0)
-               .orderBy('time_spent')
-               .limit(10));
+         // public DNS(IPv4): https://us-central1-finding-hidden-dog.cloudfunctions.net/get
+      exports.get = functions.https.onRequest((request, response) => {
+           let rankInfo = 'Success!\tRank Info.\n';
+        let cnt = 1;
+         
+           db.collection('scores')
+          .where('time_spent', '>', 0)
+             .orderBy('time_spent')
+       .limit(10)
+             .get()
+          .then(snapshot => {
+               snapshot.forEach(doc => {
+                 rankInfo += cnt + '. ' + doc.data().user_name + '\t' + doc.data().time_spent + '\n';
+                 cnt++;
+               })
+               response.send(rankInfo);
+             })
+             .catch(err => {
+               console.log(err);
+             });
          })  // end get.
          ```
-
+         
          DB에서 상위 10위까지의 랭킹 정보를 반환한다.
-
+         
          이 때, 걸린 시간이 0 이하일 경우 비정상 데이터라고 판단하여 결과에 포함시키지 않는다.
+
+
+
+4. Reference
+
+   [Firebase functions 문서](https://firebase.google.com/docs/functions)
+
+   [Firestore 문서](https://firebase.google.com/docs/firestore)
 

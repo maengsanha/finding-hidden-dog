@@ -67,8 +67,8 @@ function onGame() {
       clearInterval(cnt);
       const time_end = new Date().getTime();
       const time_spent = time_end - time_start;
-      alert('time spent: ' + time_spent / 1000 + 'sec');
-      // endGame(time_spent / 1000);
+      // alert('time spent: ' + time_spent / 1000 + 'sec');
+      alert(endGame(time_spent / 1000));
       return;
     }
     timeOut--;
@@ -91,15 +91,20 @@ function flipOver(id) {
 
 // endGame sends score data to Firebase, receives top 10 scores.
 function endGame(timeSpent) {
+  // ignore user whose name is DEFAULT
   if (userName == 'DEFAULT')
     timeSpent = -1;
+
+  let data = {
+    user_name: userName,
+    time_spent: timeSpent
+  };
+
   // insert score data into FireStore
+  fetch('https://us-central1-finding-hidden-dog.cloudfunctions.net/insert', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
 
-  // end sending data
-
-  // get top 10 scores.
-
-  // end getting data
-
-  return;
+  return 'Success! You can see the rank at https://us-central1-finding-hidden-dog.cloudfunctions.net/get';
 } // end endGame.
